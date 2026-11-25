@@ -6,12 +6,19 @@ import api from "@/api";
  * @param {object} pkg - Paket dari API.
  * @returns {object} Paket hasil mapping.
  */
+const isPromoCurrentlyActive = (pkg) => {
+	if (!pkg.tanggal_mulai || !pkg.tanggal_berakhir) return false;
+	const now = new Date();
+	return new Date(pkg.tanggal_mulai) <= now && new Date(pkg.tanggal_berakhir) >= now;
+};
+
 const mapPackage = (pkg) => ({
 	id: pkg.id,
 	name: pkg.nama,
 	description: pkg.deskripsi,
 	totalPrice: pkg.harga_dasar || 0,
-	packageDiscount: pkg.diskon || 0,
+	// Diskon hanya berlaku saat promo aktif; 0 jika promo expired agar harga normal tampil
+	packageDiscount: isPromoCurrentlyActive(pkg) ? (pkg.diskon || 0) : 0,
 	items:
 		pkg.items?.map((item) => ({
 			id: item.id,
@@ -34,18 +41,12 @@ const filterActivePackages = (packages) => {
 	const now = new Date();
 
 	return packages.filter((pkg) => {
-		// Cek tanggal mulai - paket harus sudah dimulai
-		if (pkg.tanggal_mulai) {
-			const startDate = new Date(pkg.tanggal_mulai);
-			if (startDate > now) return false;
-		}
+		// Paket yang belum dimulai (upcoming) tidak ditampilkan
+		if (pkg.tanggal_mulai && new Date(pkg.tanggal_mulai) > now) return false;
 
-		// Cek tanggal berakhir - paket tidak boleh expired
-		if (pkg.tanggal_berakhir) {
-			const endDate = new Date(pkg.tanggal_berakhir);
-			if (endDate < now) return false;
-		}
-		return true; // Paket aktif dan dapat dibeli
+		// Paket expired tetap ditampilkan dengan harga normal (tanpa diskon promo)
+		// Visibilitas dikontrol hanya oleh field visibilitas di tabel visibilitas_paket
+		return true;
 	});
 };
 

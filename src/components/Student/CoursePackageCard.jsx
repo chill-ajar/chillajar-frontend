@@ -109,6 +109,9 @@ export function CoursePackageCard({
 	};
 
 	const promoStatus = getPromoStatus();
+	const isPromoActive = promoStatus.status === "active";
+	// Diskon hanya berlaku saat promo aktif; paket expired tetap tampil dengan harga normal
+	const displayTotalPrice = (isPromoActive ? finalPackagePrice : actualPackagePrice) + mentorFee;
 
 	// Fungsi untuk menghitung waktu tersisa
 	const calculateTimeRemaining = () => {
@@ -267,8 +270,8 @@ export function CoursePackageCard({
 					<div className="space-y-2">
 						{/* Pricing - Simplified tanpa breakdown mentor fee */}
 						<div className="text-xs text-gray-600 space-y-1">
-							{/* Hanya tampilkan harga paket final */}
-							{packageDiscount > 0 && (
+							{/* Harga coret hanya tampil saat promo aktif */}
+							{isPromoActive && packageDiscount > 0 && (
 								<div className="flex justify-between">
 									<span>Harga Normal:</span>
 									<div className="line-through text-gray-400">
@@ -283,9 +286,9 @@ export function CoursePackageCard({
 								<span className="font-medium text-gray-800">Harga Paket:</span>
 								<div className="text-right">
 									<div className="text-base sm:text-lg font-bold text-gray-800">
-										Rp {totalFinalPrice.toLocaleString("id-ID")}
+										Rp {displayTotalPrice.toLocaleString("id-ID")}
 									</div>
-									{packageDiscount > 0 && (
+									{isPromoActive && packageDiscount > 0 && (
 										<div className="text-xs text-green-600 font-medium">
 											Hemat Rp {packageDiscount.toLocaleString("id-ID")}
 										</div>
